@@ -1,47 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import corsHeaders from '@/config/cors'; // si tu as une fonction de CORS
-const prisma = new PrismaClient();
+import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
+import corsHeaders from '@/config/cors'
 
-type Context = {
-  params: {
-    id: string;
-  };
-};
+const prisma = new PrismaClient()
+
 export async function OPTIONS() {
-    return corsHeaders(new NextResponse(null, {
-            status: 200,
-        }))
-}
-// ✅ GET /api/todo/[id]
-export async function GET(req: NextRequest, context: Context) {
-  const { id } = context.params;
-  const todo = await prisma.todo.findUnique({
-    where: { id: Number(id) },
-  });
-  return corsHeaders(NextResponse.json(todo));
+  return corsHeaders(new NextResponse(null, { status: 200 }))
 }
 
-// ✅ PUT /api/todo/[id]
-export async function PUT(req: NextRequest, context: Context) {
-  const { id } = context.params;
-  const data = await req.json();
+export async function GET(_req: NextRequest, context: any) {
+  const id = Number(context.params.id)
+
+  const todo = await prisma.todo.findUnique({
+    where: { id },
+  })
+
+  return corsHeaders(NextResponse.json(todo))
+}
+
+export async function PUT(req: NextRequest, context: any) {
+  const id = Number(context.params.id)
+  const data = await req.json()
 
   const updated = await prisma.todo.update({
-    where: { id: Number(id) },
-    data,
-  });
+    where: { id },
+    data: {
+      title: data.title,
+      description: data.description,
+      completed: data.completed,
+    },
+  })
 
-  return corsHeaders(NextResponse.json(updated));
+  return corsHeaders(NextResponse.json(updated))
 }
 
-// ✅ DELETE /api/todo/[id]
-export async function DELETE(req: NextRequest, context: Context) {
-  const { id } = context.params;
+export async function DELETE(_req: NextRequest, context: any) {
+  const id = Number(context.params.id)
 
-  const deleted = await prisma.todo.delete({
-    where: { id: Number(id) },
-  });
+  await prisma.todo.delete({
+    where: { id },
+  })
 
-  return corsHeaders(NextResponse.json(deleted));
+  return corsHeaders(NextResponse.json({ message: 'Deleted' }))
 }
